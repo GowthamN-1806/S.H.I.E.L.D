@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.H.I.E.L.D — Admin Control Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            superdark: '#050a14',
+                            dark: '#0a1224',
+                            nav: '#111a30',
+                            panel: '#15213d',
+                            accent: '#00d4ff',
+                            neon: '#00ff88',
+                            warning: '#ffc107',
+                            danger: '#ff2444'
+                        }
+                    },
+                    fontFamily: {
+                        mono: ['"SF Mono"', '"Fira Code"', 'monospace'],
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #050a14;
+            color: #e2e8f0;
+        }
+
+        .glass-panel {
+            background: rgba(21, 33, 61, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 212, 255, 0.1);
+        }
+
+        .hidden-section {
+            display: none !important;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0a1224;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #1f305e;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00d4ff;
+        }
+
+        /* Status Blips */
+        .blip-green {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #00ff88;
+            box-shadow: 0 0 8px #00ff88;
+        }
+
+        .blip-red {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #ff2444;
+            box-shadow: 0 0 8px #ff2444;
+        }
+
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 14px;
+            color: white;
+            opacity: 0;
+            transform: translateX(50px);
+            animation: slideIn 0.3s forwards, fadeOut 0.3s 4.7s forwards;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .toast.success {
+            background-color: rgba(0, 255, 136, 0.2);
+            border: 1px solid #00ff88;
+            color: #00ff88;
+        }
+
+        .toast.error {
+            background-color: rgba(255, 36, 68, 0.2);
+            border: 1px solid #ff2444;
+            color: #ff2444;
+        }
+
+        .toast.info {
+            background-color: rgba(0, 212, 255, 0.2);
+            border: 1px solid #00d4ff;
+            color: #00d4ff;
+        }
+
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+        }
+
+        /* Loader */
+        .loader {
+            border: 3px solid rgba(0, 212, 255, 0.1);
+            border-top: 3px solid #00d4ff;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body class="font-sans antialiased h-screen overflow-hidden flex flex-col">
+
+    <!-- AUTH OVERLAY -->
+    <div id="auth-overlay" class="absolute inset-0 z-50 bg-brand-superdark flex items-center justify-center">
+        <div
+            class="glass-panel p-8 rounded-xl shadow-2xl w-full max-w-md border-t-4 border-t-brand-accent transform transition-all">
+            <div class="text-center mb-8">
+                <i class="fa-solid fa-shield-halved text-5xl text-brand-accent mb-4"></i>
+                <h1 class="text-2xl font-bold tracking-widest uppercase">S.H.I.E.L.D</h1>
+                <p class="text-gray-400 text-sm tracking-widest mt-1">CYBER DEFENSE CENTER</p>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs text-brand-accent font-mono mb-1">OPERATOR ID</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-user absolute left-3 top-3 text-gray-500"></i>
+                        <input type="text" id="login-user"
+                            class="w-full bg-brand-dark border border-gray-700 rounded pl-10 pr-4 py-2 text-white focus:outline-none focus:border-brand-accent transition-colors font-mono"
+                            placeholder="username" autocomplete="off">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs text-brand-accent font-mono mb-1">AUTHORIZATION KEY</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-key absolute left-3 top-3 text-gray-500"></i>
+                        <input type="password" id="login-pass"
+                            class="w-full bg-brand-dark border border-gray-700 rounded pl-10 pr-4 py-2 text-white focus:outline-none focus:border-brand-accent transition-colors font-mono"
+                            placeholder="••••••••">
+                    </div>
+                </div>
+
+                <div id="login-err" class="text-brand-danger text-xs font-mono h-4"></div>
+
+                <button id="btn-auth"
+                    class="w-full bg-brand-accent hover:bg-cyan-400 text-brand-superdark font-bold py-2 px-4 rounded transition-colors mt-2 uppercase tracking-wide flex justify-center items-center gap-2">
+                    <span>Initialize Session</span>
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                </button>
+            </div>
+
+            <div class="mt-8 pt-4 border-t border-gray-800 text-center text-xs text-gray-500 font-mono">
+                RESTRICTED ACCESS ONLY. UNAUTHORIZED ENTRY IS A FEDERAL CRIME.
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP CONTROLS -->
+    <div id="app-container" class="flex h-full hidden-section transition-opacity duration-500 opacity-0">
+
+        <!-- SIDEBAR -->
+        <aside
+            class="w-64 bg-brand-nav flex flex-col border-r border-gray-800 shadow-xl z-20 hidden md:flex flex-shrink-0">
+            <div class="p-4 border-b border-gray-800 flex items-center gap-3">
+                <i class="fa-solid fa-shield-halved text-2xl text-brand-accent"></i>
+                <div>
+                    <h2 class="font-bold tracking-widest text-sm text-white">S.H.I.E.L.D</h2>
+                    <div class="text-[10px] text-brand-accent font-mono">SOC TERMINAL</div>
+                </div>
+            </div>
+
+            <nav class="flex-1 overflow-y-auto py-4 space-y-1 px-2" id="nav-menu">
+                <!-- Navigation inserted by JS -->
+            </nav>
+
+            <div class="p-4 border-t border-gray-800">
+                <div class="flex items-center gap-3 mb-4">
+                    <div
+                        class="w-10 h-10 rounded-full bg-brand-dark border border-brand-accent flex items-center justify-center text-brand-accent font-bold">
+                        <span id="user-initials">--</span>
+                    </div>
+                    <div class="flex-1 truncate">
+                        <div class="text-sm font-bold text-white truncate" id="user-name">Operator</div>
+                        <div class="text-[10px] text-brand-neon font-mono truncate" id="user-role">Unknown Role</div>
+                    </div>
+                </div>
+                <button id="btn-logout"
+                    class="w-full py-2 bg-gray-800 hover:bg-brand-danger text-white text-xs font-bold rounded transition-colors flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-power-off"></i> Terminate Session
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-brand-superdark">
+
+            <!-- TOP STATUS BAR -->
+            <header
+                class="h-14 bg-brand-nav border-b border-gray-800 flex items-center justify-between px-4 sm:px-6 shadow-sm z-10">
+                <div class="flex items-center gap-4">
+                    <button id="mobile-menu-btn" class="md:hidden text-gray-400 hover:text-white">
+                        <i class="fa-solid fa-bars text-xl"></i>
+                    </button>
+                    <h2 class="text-lg font-semibold tracking-wide text-white uppercase" id="current-page-title">
+                        Dashboard</h2>
+                </div>
+
+                <div class="flex items-center gap-6">
+                    <div class="hidden sm:flex items-center gap-2 text-xs font-mono">
+                        <span class="text-gray-400">NETWORK STATUS:</span>
+                        <span class="blip-green"></span>
+                        <span class="text-brand-neon">SECURE</span>
+                    </div>
+                    <div class="text-brand-accent font-mono text-sm tracking-wider" id="live-clock">00:00:00</div>
+                    <button class="relative text-gray-400 hover:text-white transition-colors">
+                        <i class="fa-regular fa-bell text-lg"></i>
+                        <span class="absolute -top-1 -right-1 w-2 h-2 bg-brand-danger rounded-full animate-ping"></span>
+                        <span class="absolute -top-1 -right-1 w-2 h-2 bg-brand-danger rounded-full"></span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- SCROLLABLE PAGE CONTENT -->
+            <div class="flex-1 overflow-y-auto p-4 sm:p-6" id="page-container">
+
+                <!-- DASHBOARD VIEW -->
+                <section id="view-dashboard" class="page-view space-y-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="glass-panel p-4 rounded-lg flex flex-col justify-between">
+                            <div class="flex justify-between items-start">
+                                <span class="text-gray-400 text-xs font-mono">TOTAL USERS</span>
+                                <i class="fa-solid fa-users text-gray-500"></i>
+                            </div>
+                            <div class="text-3xl font-bold text-white mt-2" id="stat-users">--</div>
+                        </div>
+                        <div class="glass-panel p-4 rounded-lg flex flex-col justify-between">
+                            <div class="flex justify-between items-start">
+                                <span class="text-gray-400 text-xs font-mono">ACTIVE SESSIONS</span>
+                                <i class="fa-solid fa-network-wired text-brand-accent"></i>
+                            </div>
+                            <div class="text-3xl font-bold text-brand-accent mt-2" id="stat-sessions">--</div>
+                        </div>
+                        <div
+                            class="glass-panel p-4 rounded-lg border-t-2 border-t-brand-danger flex flex-col justify-between">
+                            <div class="flex justify-between items-start">
+                                <span class="text-gray-400 text-xs font-mono">THREAT ALERTS</span>
+                                <i class="fa-solid fa-triangle-exclamation text-brand-danger"></i>
+                            </div>
+                            <div class="text-3xl font-bold text-brand-danger mt-2" id="stat-alerts">0</div>
+                        </div>
+                        <div class="glass-panel p-4 rounded-lg flex flex-col justify-between">
+                            <div class="flex justify-between items-start">
+                                <span class="text-gray-400 text-xs font-mono">BLOCKED REQUESTS</span>
+                                <i class="fa-solid fa-shield-virus text-brand-neon"></i>
+                            </div>
+                            <div class="text-3xl font-bold text-brand-neon mt-2" id="stat-blocked">--</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2 glass-panel p-4 rounded-lg">
+                            <h3 class="text-sm font-bold text-gray-300 font-mono mb-4 flex justify-between">
+                                <span>SYSTEM STATUS</span>
+                                <button onclick="fetchStats()" class="text-brand-accent hover:text-white"><i
+                                        class="fa-solid fa-rotate"></i></button>
+                            </h3>
+                            <div class="overflow-hidden">
+                                <table class="w-full text-sm text-left">
+                                    <tbody class="divide-y divide-gray-800 font-mono">
+                                        <tr>
+                                            <td class="py-3 text-gray-400">API Gateway</td>
+                                            <td class="py-3 text-right text-brand-neon" id="sys-api">Checking...</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="py-3 text-gray-400">Database Connection</td>
+                                            <td class="py-3 text-right text-brand-neon" id="sys-db">Checking...</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="py-3 text-gray-400">Enforcement Engine</td>
+                                            <td class="py-3 text-right text-brand-neon">Online</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="py-3 text-gray-400">Server Uptime</td>
+                                            <td class="py-3 text-right text-gray-200" id="sys-uptime">--</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="glass-panel p-4 rounded-lg">
+                            <h3 class="text-sm font-bold text-gray-300 font-mono mb-4">SECURITY SCORE</h3>
+                            <div class="flex items-center justify-center h-40 relative">
+                                <!-- Mock circular progress -->
+                                <svg class="w-32 h-32 transform -rotate-90">
+                                    <circle cx="64" cy="64" r="56" stroke="currentColor" stroke-width="8"
+                                        fill="transparent" class="text-gray-800" />
+                                    <circle cx="64" cy="64" r="56" stroke="currentColor" stroke-width="8"
+                                        fill="transparent" stroke-dasharray="351.8" stroke-dashoffset="0"
+                                        class="text-brand-neon shadow-lg" />
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center flex-col">
+                                    <span class="text-3xl font-bold text-white">100</span>
+                                    <span class="text-[10px] text-brand-neon font-mono">OPTIMAL</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECURITY MONITORING / AUDIT LOGS VIEW -->
+                <section id="view-security-monitoring" class="page-view hidden-section space-y-4">
+                    <div class="flex justify-between items-center bg-brand-panel p-4 rounded-lg border border-gray-800">
+                        <div class="flex gap-4">
+                            <span class="text-brand-neon font-mono text-sm"><i
+                                    class="fa-solid fa-circle text-[8px] animate-pulse relative -top-0.5 mr-1"></i> LIVE
+                                FEED ACTIVE</span>
+                        </div>
+                        <button onclick="fetchLogs()"
+                            class="bg-gray-800 hover:bg-gray-700 text-white px-3 py-1 rounded text-xs font-mono border border-gray-600">
+                            <i class="fa-solid fa-rotate mr-1"></i> SYNC
+                        </button>
+                    </div>
+
+                    <div class="glass-panel rounded-lg overflow-hidden border border-gray-800">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm font-mono whitespace-nowrap">
+                                <thead class="bg-black/40 text-gray-400 border-b border-gray-800 text-xs">
+                                    <tr>
+                                        <th class="px-4 py-3 font-normal">TIMESTAMP</th>
+                                        <th class="px-4 py-3 font-normal">USER / IP</th>
+                                        <th class="px-4 py-3 font-normal">ROLE</th>
+                                        <th class="px-4 py-3 font-normal">ACTION</th>
+                                        <th class="px-4 py-3 font-normal">ENDPOINT</th>
+                                        <th class="px-4 py-3 font-normal">STATUS</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="live-logs-body" class="divide-y divide-gray-800/50">
+                                    <tr>
+                                        <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                                            <div class="loader"></div> Loading logs...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- INFRASTRUCTURE CONTROL VIEW -->
+                <section id="view-infrastructure" class="page-view hidden-section">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                        <!-- Traffic -->
+                        <div class="glass-panel p-6 rounded-lg border-t-2 border-brand-accent">
+                            <div class="flex items-center gap-4 mb-6">
+                                <div
+                                    class="w-12 h-12 rounded bg-brand-accent/20 flex items-center justify-center text-brand-accent text-xl">
+                                    <i class="fa-solid fa-traffic-light"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-white tracking-wide">Traffic Control</h3>
+                                    <p class="text-xs text-gray-400 font-mono">POST /api/traffic/controlSignal</p>
+                                </div>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="p-3 bg-black/30 rounded border border-gray-800">
+                                    <div class="text-[10px] text-gray-500 font-mono mb-1">PAYLOAD</div>
+                                    <code
+                                        class="text-xs text-brand-neon">{ "signalId": "N1-Beta", "status": "Red" }</code>
+                                </div>
+                                <button onclick="infraAction('traffic', 'POST')"
+                                    class="w-full bg-brand-panel hover:bg-gray-800 border border-gray-600 text-white font-mono text-sm py-2 rounded transition-colors uppercase">
+                                    Execute Override
+                                </button>
+                                <div id="res-traffic" class="hidden text-xs font-mono p-2 rounded mt-2 border"></div>
+                            </div>
+                        </div>
+
+                        <!-- Power -->
+                        <div class="glass-panel p-6 rounded-lg border-t-2 border-brand-warning">
+                            <div class="flex items-center gap-4 mb-6">
+                                <div
+                                    class="w-12 h-12 rounded bg-brand-warning/20 flex items-center justify-center text-brand-warning text-xl">
+                                    <i class="fa-solid fa-bolt"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-white tracking-wide">Power Grid</h3>
+                                    <p class="text-xs text-gray-400 font-mono">GET /api/power/gridStatus</p>
+                                </div>
+                            </div>
+                            <div class="space-y-4">
+                                <div
+                                    class="p-3 bg-black/30 rounded border border-gray-800 h-[62px] flex items-center text-gray-500 text-xs font-mono">
+                                    NO PAYLOAD REQUIRED
+                                </div>
+                                <button onclick="infraAction('power', 'GET')"
+                                    class="w-full bg-brand-panel hover:bg-gray-800 border border-gray-600 text-white font-mono text-sm py-2 rounded transition-colors uppercase">
+                                    Fetch Status
+                                </button>
+                                <div id="res-power" class="hidden text-xs font-mono p-2 rounded mt-2 border"></div>
+                            </div>
+                        </div>
+
+                        <!-- Water -->
+                        <div class="glass-panel p-6 rounded-lg border-t-2 border-cyan-500">
+                            <div class="flex items-center gap-4 mb-6">
+                                <div
+                                    class="w-12 h-12 rounded bg-cyan-500/20 flex items-center justify-center text-cyan-500 text-xl">
+                                    <i class="fa-solid fa-droplet"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-white tracking-wide">Water System</h3>
+                                    <p class="text-xs text-gray-400 font-mono">GET /api/water/status</p>
+                                </div>
+                            </div>
+                            <div class="space-y-4">
+                                <div
+                                    class="p-3 bg-black/30 rounded border border-gray-800 h-[62px] flex items-center text-gray-500 text-xs font-mono">
+                                    NO PAYLOAD REQUIRED
+                                </div>
+                                <button onclick="infraAction('water', 'GET')"
+                                    class="w-full bg-brand-panel hover:bg-gray-800 border border-gray-600 text-white font-mono text-sm py-2 rounded transition-colors uppercase">
+                                    Check Flow Rate
+                                </button>
+                                <div id="res-water" class="hidden text-xs font-mono p-2 rounded mt-2 border"></div>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+
+                <!-- USER MANAGEMENT VIEW -->
+                <section id="view-user-management" class="page-view hidden-section">
+                    <div class="glass-panel p-6 rounded-lg">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-bold">Directory Services</h3>
+                            <button
+                                class="bg-brand-accent hover:bg-cyan-400 text-black px-3 py-1.5 rounded text-xs font-bold font-mono">
+                                <i class="fa-solid fa-user-plus mr-1"></i> PROVISION USER
+                            </button>
+                        </div>
+                        <div class="bg-black/30 rounded border border-gray-800 p-8 text-center">
+                            <i class="fa-solid fa-database text-4xl text-gray-600 mb-4"></i>
+                            <p class="text-gray-400 font-mono text-sm mb-4">Fetching directory from /api/admin/users...
+                            </p>
+                            <p
+                                class="text-brand-warning text-xs border border-brand-warning/30 bg-brand-warning/10 p-2 rounded inline-block">
+                                Endpoint unavailable or under construction in this branch.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- FALLBACK VIEW FOR UNIMPLEMENTED TABS -->
+                <section id="view-fallback" class="page-view hidden-section h-full flex items-center justify-center">
+                    <div class="text-center">
+                        <i class="fa-solid fa-layer-group text-6xl text-gray-700 mb-4"></i>
+                        <h2 class="text-xl font-bold text-gray-400">MODULE SECURED</h2>
+                        <p class="text-gray-600 text-sm mt-2 font-mono">This dashboard panel is
+                            compartmentalized.<br>Clearance or integration required.</p>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- TOAST CONTAINER -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="dashboard.js"></script>
+</body>
+
+</html>

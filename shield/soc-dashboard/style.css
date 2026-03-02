@@ -1,0 +1,590 @@
+/* ==========================================================================
+   S.H.I.E.L.D — SOC DASHBOARD ULTRA FRONTEND
+   Core Styling System
+   ========================================================================== */
+
+:root {
+    --color-base: #020812;
+    --color-surface: #070f1a;
+    --color-surface-elevated: #0a1628;
+    --color-border: #0d2137;
+    --color-border-active: #00d4ff;
+
+    --color-neon-cyan: #00d4ff;
+    --color-neon-green: #00ff88;
+    --color-neon-orange: #ff8c00;
+    --color-neon-red: #ff2444;
+    --color-neon-purple: #a855f7;
+    --color-neon-gold: #ffd700;
+    --color-neon-teal: #00ffcc;
+
+    --color-text-primary: #e2f0ff;
+    --color-text-secondary: #4a7a9b;
+    --color-text-muted: #1e3a52;
+}
+
+/* Base resets & selections */
+::selection {
+    background: rgba(0, 212, 255, 0.3);
+    color: var(--color-neon-cyan);
+}
+
+::-moz-selection {
+    background: rgba(0, 212, 255, 0.3);
+    color: var(--color-neon-cyan);
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--color-base);
+}
+
+/* ==========================================================================
+   VISUAL EFFECTS
+   ========================================================================== */
+
+/* [1] SCANLINE OVERLAY */
+#scanline-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 9000;
+    opacity: 0.03;
+    background: repeating-linear-gradient(to bottom,
+            rgba(255, 255, 255, 0),
+            rgba(255, 255, 255, 0) 1px,
+            rgba(0, 0, 0, 0.8) 2px,
+            rgba(0, 0, 0, 0.8) 3px);
+}
+
+/* [2] PERSPECTIVE GRID BACKGROUND */
+#perspective-grid {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.05;
+    background-image:
+        linear-gradient(rgba(0, 212, 255, 0.5) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 212, 255, 0.5) 1px, transparent 1px);
+    background-size: 50px 50px;
+    background-position: center bottom;
+    transform: perspective(500px) rotateX(60deg) scale(2) translateY(-100px);
+    transform-origin: center bottom;
+}
+
+/* [3] ANIMATED HEX PARTICLE FIELD */
+/* Done dynamically via JS generating dots/hexes, or CSS background here */
+#hex-particle-field {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.04;
+    background-image: url('data:image/svg+xml;utf8,<svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><path d="M20 0l17.32 10v20L20 40 2.68 30V10z" fill="none" stroke="%2300d4ff" stroke-width="1"/></svg>');
+    background-size: 60px 60px;
+    animation: hexPulse 10s infinite alternate;
+}
+
+@keyframes hexPulse {
+    0% {
+        opacity: 0.02;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.06;
+        transform: scale(1.05);
+    }
+
+    100% {
+        opacity: 0.02;
+        transform: scale(1);
+    }
+}
+
+/* [4] GLOWING CARDS */
+.glow-card {
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.08);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: linear-gradient(135deg, var(--color-surface-elevated), var(--color-surface));
+}
+
+.glow-card:hover {
+    box-shadow: 0 0 30px rgba(0, 212, 255, 0.25);
+    transform: translateY(-2px);
+    border-color: rgba(0, 212, 255, 0.4);
+}
+
+.glow-card.alert-pulse {
+    box-shadow: 0 0 50px rgba(255, 36, 68, 0.4);
+    border-color: rgba(255, 36, 68, 0.8);
+    animation: cardPulseRed 1.5s infinite;
+}
+
+@keyframes cardPulseRed {
+    0% {
+        box-shadow: 0 0 20px rgba(255, 36, 68, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 0 60px rgba(255, 36, 68, 0.6);
+    }
+
+    100% {
+        box-shadow: 0 0 20px rgba(255, 36, 68, 0.3);
+    }
+}
+
+/* [5] PULSE RING ANIMATION */
+.pulse-ring-container {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pulse-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 2px solid var(--color-neon-red);
+    animation: pulseRing 1.5s infinite cubic-bezier(0.2, 0.8, 0.2, 1);
+    pointer-events: none;
+}
+
+@keyframes pulseRing {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translate(-50%, -50%) scale(2.5);
+        opacity: 0;
+    }
+}
+
+/* [7] TYPEWRITER LOG ENTRIES */
+.typewriter-line {
+    overflow: hidden;
+    white-space: pre-wrap;
+    word-break: break-all;
+    display: inline-block;
+    vertical-align: top;
+}
+
+.typewriter-cursor {
+    display: inline-block;
+    width: 6px;
+    height: 12px;
+    background-color: currentColor;
+    margin-left: 2px;
+    vertical-align: middle;
+    animation: blinkCursor 0.8s infinite;
+}
+
+@keyframes blinkCursor {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
+}
+
+/* [8] GRADIENT CARD BORDERS */
+.gradient-border-card {
+    position: relative;
+    border: none;
+    z-index: 1;
+}
+
+.gradient-border-card::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, var(--color-neon-cyan), var(--color-neon-purple), var(--color-neon-green));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+.gradient-border-card:hover::before {
+    opacity: 1;
+}
+
+/* [11] COUNTER ROLL ANIMATION (Using CSS transitions from JS) */
+.counter-roll {
+    display: inline-block;
+    transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s;
+}
+
+.counter-roll.rolling-up {
+    transform: translateY(-5px);
+    opacity: 0.5;
+}
+
+.counter-roll.rolling-down {
+    transform: translateY(5px);
+    opacity: 0.5;
+}
+
+/* ==========================================================================
+   COMPONENTS
+   ========================================================================== */
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(13, 33, 55, 0.5);
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(74, 122, 155, 0.5);
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--color-neon-cyan);
+}
+
+/* Sidebar Nav Items */
+.nav-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    margin: 2px 0;
+    border-radius: 4px;
+    color: var(--color-text-secondary);
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.nav-item:hover {
+    background: rgba(0, 212, 255, 0.04);
+    color: var(--color-text-primary);
+}
+
+.nav-item.active {
+    border-left: 3px solid var(--color-neon-cyan);
+    background: rgba(0, 212, 255, 0.08);
+    color: var(--color-neon-cyan);
+}
+
+.nav-icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 12px;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.nav-item:hover .nav-icon,
+.nav-item.active .nav-icon {
+    opacity: 1;
+}
+
+.nav-badge {
+    margin-left: auto;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 12px;
+}
+
+.nav-badge.red {
+    background: rgba(255, 36, 68, 0.2);
+    color: var(--color-neon-red);
+    border: 1px solid rgba(255, 36, 68, 0.5);
+}
+
+.nav-badge.red.pulse {
+    animation: badgePulseRed 1s infinite;
+}
+
+@keyframes badgePulseRed {
+
+    0%,
+    100% {
+        box-shadow: 0 0 4px rgba(255, 36, 68, 0);
+    }
+
+    50% {
+        box-shadow: 0 0 10px rgba(255, 36, 68, 0.8);
+    }
+}
+
+.nav-badge.green {
+    background: rgba(0, 255, 136, 0.2);
+    color: var(--color-neon-green);
+    border: 1px solid rgba(0, 255, 136, 0.5);
+}
+
+.nav-badge.purple {
+    background: var(--color-neon-purple);
+    color: white;
+    border: none;
+}
+
+.nav-badge.blue {
+    background: rgba(0, 212, 255, 0.2);
+    color: var(--color-neon-cyan);
+    border: 1px solid rgba(0, 212, 255, 0.5);
+}
+
+.nav-badge.gold {
+    background: rgba(255, 215, 0, 0.2);
+    color: var(--color-neon-gold);
+    border: 1px solid rgba(255, 215, 0, 0.5);
+}
+
+.nav-badge.teal {
+    background: rgba(0, 255, 204, 0.2);
+    color: var(--color-neon-teal);
+    border: 1px solid rgba(0, 255, 204, 0.5);
+}
+
+
+/* Log Feed & Alert Coloring */
+.log-entry {
+    padding: 3px 6px;
+    margin-bottom: 2px;
+    border-radius: 2px;
+    border-left: 3px solid transparent;
+}
+
+.log-entry.CRITICAL {
+    color: var(--color-neon-red);
+    border-left-color: var(--color-neon-red);
+    background: rgba(255, 36, 68, 0.06);
+}
+
+.log-entry.WARNING {
+    color: var(--color-neon-orange);
+    border-left-color: var(--color-neon-orange);
+    background: rgba(255, 140, 0, 0.04);
+}
+
+.log-entry.INFO {
+    color: var(--color-neon-cyan);
+    border-left-color: var(--color-neon-cyan);
+    background: transparent;
+}
+
+.log-entry.NORMAL {
+    color: var(--color-neon-green);
+    border-left-color: var(--color-neon-green);
+    background: transparent;
+}
+
+.log-entry.AI {
+    color: var(--color-neon-purple);
+    border-left-color: var(--color-neon-purple);
+    background: rgba(168, 85, 247, 0.05);
+}
+
+.log-entry.TWIN {
+    color: var(--color-neon-teal);
+    border-left-color: var(--color-neon-teal);
+    font-style: italic;
+}
+
+/* Alert Cards */
+.alert-card {
+    background: var(--color-surface-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: 12px;
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+}
+
+.alert-card.CRITICAL {
+    border-left: 4px solid var(--color-neon-red);
+    background: linear-gradient(90deg, rgba(255, 36, 68, 0.08) 0%, transparent 100%);
+}
+
+.alert-card.WARNING {
+    border-left: 4px solid var(--color-neon-orange);
+}
+
+.alert-card.INFO {
+    border-left: 4px solid var(--color-neon-green);
+}
+
+.alert-card.acknowledged {
+    opacity: 0.6;
+    filter: grayscale(80%);
+    border-left-color: var(--color-text-secondary);
+    background: var(--color-base);
+}
+
+
+/* SVG City Nodes */
+.city-node-hex {
+    transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    cursor: pointer;
+}
+
+.city-node-hex:hover {
+    transform: scale(1.1);
+    filter: brightness(1.2);
+}
+
+path.connection-line {
+    transition: stroke 0.4s ease;
+}
+
+circle.data-packet {
+    pointer-events: none;
+}
+
+.node-label {
+    user-select: none;
+    pointer-events: none;
+}
+
+/* Animations for Nodes */
+@keyframes dash {
+    from {
+        stroke-dashoffset: 200;
+    }
+
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+.conn-attacking {
+    stroke-dasharray: 5, 5;
+    animation: dash 0.5s linear infinite;
+}
+
+/* Toast Notification slide-in */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.toast-slide-in {
+    animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Table styling for datagrids */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th {
+    text-align: left;
+    padding: 8px;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    border-bottom: 1px solid var(--color-border);
+    cursor: pointer;
+    user-select: none;
+}
+
+.data-table td {
+    padding: 8px;
+    border-bottom: 1px solid rgba(13, 33, 55, 0.3);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+}
+
+.data-table tr:hover td {
+    background: rgba(0, 212, 255, 0.03);
+}
+
+/* Map arcs animation */
+@keyframes drawArc {
+    from {
+        stroke-dashoffset: 1000;
+    }
+
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+.attack-arc {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    animation: drawArc 2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* Shake animation */
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    10%,
+    30%,
+    50%,
+    70%,
+    90% {
+        transform: translateX(-2px);
+    }
+
+    20%,
+    40%,
+    60%,
+    80% {
+        transform: translateX(2px);
+    }
+}
+
+.animate-shake {
+    animation: shake 0.5s;
+}
+
+/* Matrix rain canvas */
+#matrix-rain {
+    font-family: monospace;
+}
